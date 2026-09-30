@@ -1,0 +1,688 @@
+================================================================================
+          MILITARY ASSET MANAGEMENT SYSTEM
+               PROJECT DOCUMENTATION REPORT
+================================================================================
+Prepared By : srushtisd24
+Platform    : Full-Stack Web Application
+Date        : October 2026
+================================================================================
+
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+  1. Project Overview
+  2. Tech Stack & Architecture
+  3. Data Models / Schema
+  4. RBAC Explanation
+  5. API Logging
+  6. Setup Instructions
+  7. API Endpoints
+  8. Login Credentials
+
+================================================================================
+
+
+================================================================================
+1. PROJECT OVERVIEW
+================================================================================
+
+1.1 Description
+----------------
+The Military Asset Management System (MAMS) is a full-stack web application
+designed to digitize, track, and manage military equipment and assets across
+multiple bases. The platform provides a centralized dashboard for senior
+officers and base commanders to monitor the real-time status of inventory,
+equipment purchases, personnel assignments, inter-base transfers, and
+expenditure logs.
+
+The system replaces traditional paper-based logistics tracking with a secure,
+role-restricted digital platform ensuring all equipment movements are recorded,
+traceable, and auditable through a comprehensive audit logging mechanism.
+
+
+1.2 Key Features
+-----------------
+- Real-time Inventory tracking across multiple military bases
+- Equipment Purchases management with quantity and cost tracking
+- Inter-Base Transfer management with source/destination validation
+- Personnel Assignment tracking with status (Active / Returned)
+- Expenditure logging for damaged, lost, or consumed assets
+- Dashboard with live charts, metrics, and advanced filters
+  (Date Range, Base, Equipment Type)
+- Audit Log for all system-level API transactions (POST, PUT, DELETE)
+- User and Base Management via Admin-only Settings panel
+- JWT-based Authentication with Role-Based Access Control (RBAC)
+- Dark/Light theme toggle with persistent user preference
+
+
+1.3 Assumptions
+----------------
+- Each military base is a distinct entity with its own dedicated inventory pool.
+- Each user account is assigned to exactly one base at account creation time.
+- All financial values are expressed in Indian Rupees (INR / Rs.).
+- The system operates on a closed intranet and is not exposed to the public.
+- Equipment types are pre-defined by the Administrator and shared globally
+  across all bases.
+- All dates and times are recorded in UTC and displayed in local timezone.
+
+
+1.4 Limitations
+----------------
+- No file upload support for purchase orders or transfer documents.
+- Email notifications are configurable in settings but not connected to a
+  mail server in this version.
+- No real-time push notifications; users must refresh to see updated data.
+- Application is English-only; no multi-language (i18n) support.
+- Report exports (PDF/Excel per module) are not yet implemented.
+- Mobile responsiveness is partially implemented; optimized for desktop use.
+
+
+================================================================================
+2. TECH STACK & ARCHITECTURE
+================================================================================
+
+2.1 Backend - Spring Boot 3 (Java 17)
+---------------------------------------
+Framework   : Spring Boot 3.x
+ORM         : Spring Data JPA / Hibernate
+Security    : Spring Security + JWT (JSON Web Tokens)
+API Docs    : SpringDoc (Swagger UI / OpenAPI)
+Build Tool  : Apache Maven
+Language    : Java 17 (LTS)
+
+Why chosen:
+- Spring Boot provides production-ready REST APIs with minimal configuration.
+- Spring Security offers robust authentication and authorization mechanisms.
+- Hibernate simplifies database interaction with ORM and auto schema generation.
+- Java 17 is a long-term support version with modern language features.
+
+
+2.2 Frontend - React 18 (Vite)
+--------------------------------
+Framework   : React 18
+Build Tool  : Vite (fast HMR, modern ES module builds)
+UI Library  : Bootstrap 5 + React-Bootstrap
+Routing     : React Router v6
+HTTP Client : Axios (Promise-based with JWT interceptors)
+Charts      : Recharts (SVG-based responsive charts)
+Icons       : Bootstrap Icons
+
+Why chosen:
+- React enables component-based, reusable UI development.
+- Vite provides significantly faster hot module replacement than CRA.
+- Bootstrap 5 delivers consistent, responsive layouts quickly.
+- Recharts integrates easily with React for live data visualizations.
+
+
+2.3 Database - MySQL 8
+-----------------------
+- Relational database running on port 3308 (custom, to avoid port conflicts).
+- Hibernate auto-generates and updates schema using ddl-auto=update.
+- Stores all entities: bases, users, assets, purchases, transfers,
+  assignments, expenditures, audit_logs, equipment_types.
+
+Why chosen:
+- Mature, reliable RDBMS with strong support for relational data models.
+- Excellent compatibility with Spring Data JPA / Hibernate.
+- ACID compliance ensures data integrity across all transactions.
+
+
+2.4 Architecture Overview
+--------------------------
+
+  Browser (React SPA - port 5173)
+         |
+         |  HTTP/REST  (Axios + JWT Bearer Token)
+         |
+         v
+  Spring Boot API Server (port 8080)
+    |-- SecurityConfig       JWT filter chain, role enforcement
+    |-- AuditInterceptor     Logs every POST, PUT, DELETE request
+    |-- Controllers          Route handlers per feature module
+    |-- Repositories         JPA queries to MySQL
+         |
+         v
+  MySQL Database (port 3308)
+    -- Schema: military_asset_management
+
+
+================================================================================
+3. DATA MODELS / SCHEMA
+================================================================================
+
+3.1 Table: bases
+-----------------
+Column      | Type           | Description
+------------|----------------|----------------------------------
+id          | BIGINT (PK)    | Unique base identifier
+name        | VARCHAR        | Name of the military base
+code        | VARCHAR        | Short base code (e.g. CENTRAL-00)
+location    | VARCHAR        | Physical location / region
+active      | BOOLEAN        | Operational status flag
+created_at  | DATETIME       | Record creation timestamp
+
+
+3.2 Table: users
+-----------------
+Column      | Type           | Description
+------------|----------------|----------------------------------
+id          | BIGINT (PK)    | Unique user ID
+username    | VARCHAR UNIQUE | Login username
+password    | VARCHAR        | BCrypt hashed password
+full_name   | VARCHAR        | User display name
+email       | VARCHAR        | Email address
+role        | VARCHAR        | ROLE_ADMIN / ROLE_BASE_COMMANDER
+            |                | / ROLE_LOGISTICS_OFFICER
+base_id     | BIGINT (FK)    | Reference to bases.id
+active      | BOOLEAN        | Account enabled status
+
+
+3.3 Table: equipment_types
+---------------------------
+Column      | Type           | Description
+------------|----------------|----------------------------------
+id          | BIGINT (PK)    | Unique equipment type ID
+name        | VARCHAR        | Type name (e.g. Rifle, Vehicle)
+category    | VARCHAR        | Category classification
+description | TEXT           | Detailed description
+active      | BOOLEAN        | Active status flag
+
+
+3.4 Table: assets (Inventory)
+------------------------------
+Column              | Type        | Description
+--------------------|-------------|----------------------------------
+id                  | BIGINT (PK) | Unique asset record ID
+base_id             | BIGINT (FK) | Base that holds this asset
+equipment_type_id   | BIGINT (FK) | Type of equipment
+quantity            | INT         | Current quantity at this base
+status              | VARCHAR     | AVAILABLE / ASSIGNED / EXPENDED
+serial_number       | VARCHAR     | Optional serial reference
+
+
+3.5 Table: purchases
+---------------------
+Column              | Type        | Description
+--------------------|-------------|----------------------------------
+id                  | BIGINT (PK) | Purchase record ID
+base_id             | BIGINT (FK) | Purchasing base
+equipment_type_id   | BIGINT (FK) | Type of equipment purchased
+quantity            | INT         | Quantity purchased
+unit_cost           | DECIMAL     | Cost per unit (INR)
+total_cost          | DECIMAL     | Total purchase cost (INR)
+purchase_date       | DATE        | Date of purchase
+supplier            | VARCHAR     | Supplier name
+reference_number    | VARCHAR     | Purchase order reference
+created_by          | BIGINT (FK) | User who made the purchase
+remarks             | TEXT        | Additional notes
+
+
+3.6 Table: transfers
+---------------------
+Column              | Type        | Description
+--------------------|-------------|----------------------------------
+id                  | BIGINT (PK) | Transfer record ID
+from_base_id        | BIGINT (FK) | Source base
+to_base_id          | BIGINT (FK) | Destination base
+equipment_type_id   | BIGINT (FK) | Equipment being transferred
+quantity            | INT         | Quantity transferred
+transfer_date       | DATE        | Date of transfer
+status              | VARCHAR     | Transfer status
+created_by          | BIGINT (FK) | User who initiated
+remarks             | TEXT        | Notes
+
+
+3.7 Table: assignments
+-----------------------
+Column              | Type        | Description
+--------------------|-------------|----------------------------------
+id                  | BIGINT (PK) | Assignment record ID
+base_id             | BIGINT (FK) | Base of assignment
+equipment_type_id   | BIGINT (FK) | Equipment type assigned
+personnel_name      | VARCHAR     | Name of assigned personnel
+quantity            | INT         | Quantity assigned
+assigned_date       | DATE        | Date of assignment
+returned_date       | DATE        | Return date (if returned)
+status              | VARCHAR     | ACTIVE / RETURNED
+assigned_by         | BIGINT (FK) | User who assigned
+
+
+3.8 Table: expenditures
+------------------------
+Column              | Type        | Description
+--------------------|-------------|----------------------------------
+id                  | BIGINT (PK) | Expenditure record ID
+base_id             | BIGINT (FK) | Base reporting expenditure
+equipment_type_id   | BIGINT (FK) | Equipment type expended
+quantity            | INT         | Quantity expended
+expenditure_date    | DATE        | Date of expenditure
+reason              | VARCHAR     | Reason (damaged / lost / used)
+recorded_by         | BIGINT (FK) | User who logged it
+remarks             | TEXT        | Additional notes
+
+
+3.9 Table: audit_logs
+----------------------
+Column          | Type        | Description
+----------------|-------------|----------------------------------
+id              | BIGINT (PK) | Log record ID
+timestamp       | DATETIME    | UTC time of the API call
+http_method     | VARCHAR     | POST / PUT / DELETE
+api_endpoint    | VARCHAR     | URL path (e.g. /api/purchases)
+entity_type     | VARCHAR     | Module name from URL
+status          | VARCHAR     | SUCCESS or FAILED
+user_id         | BIGINT (FK) | Authenticated user (NULL = System)
+action          | VARCHAR     | Combined method + path
+description     | TEXT        | Human-readable description
+
+
+3.10 Entity Relationships
+--------------------------
+
+bases -------+---- users           (Many users per base)
+             +---- assets          (Many assets per base)
+             +---- purchases       (Many purchases per base)
+             +---- transfers       (from_base / to_base)
+             +---- assignments     (Many per base)
+             +---- expenditures    (Many per base)
+
+equipment_types ----+---- assets
+                    +---- purchases
+                    +---- transfers
+                    +---- assignments
+                    +---- expenditures
+
+users ------ audit_logs  (user_id, nullable for System actions)
+
+
+================================================================================
+4. RBAC EXPLANATION
+================================================================================
+
+4.1 Roles Defined
+------------------
+Role               | DB Constant               | Scope
+-------------------|---------------------------|-----------------------------
+Administrator      | ROLE_ADMIN                | Global - all bases, all data
+Base Commander     | ROLE_BASE_COMMANDER       | Own base only
+Logistics Officer  | ROLE_LOGISTICS_OFFICER    | Own base - supply chain only
+
+
+4.2 Permission Matrix
+----------------------
+Feature / Module             | Admin | Commander | Logistics
+-----------------------------|-------|-----------|----------
+Dashboard (global view)      | YES   | Base only | Base only
+Inventory (all bases)        | YES   | Base only | Base only
+Create Purchase              | YES   | NO        | YES
+Initiate Transfer            | YES   | YES*      | YES*
+Assignments (Create/View)    | YES   | YES*      | NO
+Expenditures (Create/View)   | YES   | YES*      | NO
+Audit Logs                   | YES   | NO        | NO
+User Management              | YES   | NO        | NO
+Settings (Bases/Equip Types) | YES   | NO        | NO
+
+* Restricted to own base only
+
+
+4.3 Backend Enforcement
+------------------------
+Each REST controller extracts the authenticated user from Spring Security's
+SecurityContextHolder, fetches the User entity from the database, and checks
+the 'role' field before processing any request. If unauthorized, the API
+returns HTTP 403 Forbidden.
+
+Example from AssetController.java:
+
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    User user = userRepository.findByUsername(auth.getName()).orElse(null);
+
+    if (user.getRole().contains("ADMIN")) {
+        return assetRepository.findAll();             // All bases
+    } else {
+        return assetRepository.findByBaseId(         // Own base only
+                   user.getBase().getId());
+    }
+
+
+4.4 Frontend Enforcement
+-------------------------
+Sidebar navigation links are conditionally rendered in Layout.jsx based on
+the role stored in the JWT payload (localStorage). Protected action buttons
+such as "Add Purchase" are hidden for unauthorized roles. This is a UX-layer
+guard only. All real security is enforced strictly by the backend API.
+
+JWT Token:
+- Issued on successful login with a 24-hour expiry.
+- Stored in localStorage.
+- Attached as a Bearer token on every API request.
+
+
+================================================================================
+5. API LOGGING
+================================================================================
+
+5.1 Mechanism Overview
+-----------------------
+All write operations (POST, PUT, DELETE) are automatically captured by a
+Spring MVC HandlerInterceptor called AuditInterceptor. This interceptor fires
+after every HTTP response is committed (afterCompletion phase), ensuring both
+successful and failed requests are recorded in the audit_logs table.
+
+
+5.2 Fields Captured Per Log Entry
+-----------------------------------
+Field           | Description
+----------------|-------------------------------------------------------
+timestamp       | UTC datetime of the API call
+http_method     | POST / PUT / DELETE
+api_endpoint    | Full URL path (e.g. /api/purchases)
+entity_type     | Module name extracted from URL (e.g. purchases)
+status          | SUCCESS (HTTP 2xx) or FAILED (non-2xx)
+user_id         | Authenticated user ID; NULL for system-level actions
+action          | Combined HTTP method and path string
+description     | Human-readable description of the performed action
+
+
+5.3 AuditInterceptor Code (Simplified)
+----------------------------------------
+
+    @Override
+    public void afterCompletion(HttpServletRequest req,
+                                HttpServletResponse res, ...) {
+        String method = req.getMethod();
+        if (method.equals("POST") || method.equals("PUT")
+                                  || method.equals("DELETE")) {
+            String path   = req.getRequestURI();
+            String status = (res.getStatus() >= 200 && res.getStatus() < 300)
+                            ? "SUCCESS" : "FAILED";
+            String entity = path.split("/").length > 2
+                            ? path.split("/")[2] : "UNKNOWN";
+            auditService.log(method + " " + path, entity, null,
+                     "User performed " + method + " " + path,
+                     method, path, status);
+        }
+    }
+
+
+5.4 AuditService
+-----------------
+AuditService resolves the currently authenticated user from SecurityContext,
+creates an AuditLog entity, and persists it to the audit_logs table via
+AuditLogRepository. If no authenticated user exists (e.g. login endpoint),
+user_id is stored as NULL and displayed as "System" in the UI.
+
+
+5.5 Viewing Audit Logs
+-----------------------
+- Access    : ROLE_ADMIN only
+- Location  : Sidebar -> Audit Logs
+- Display   : Sorted newest-first. HTTP method and status shown with
+              color-coded badges (POST=blue, DELETE=grey,
+              SUCCESS=green, FAILED=red)
+
+
+================================================================================
+6. SETUP INSTRUCTIONS
+================================================================================
+
+6.1 Prerequisites
+------------------
+- Java 17 or later (JDK installed, JAVA_HOME set in environment variables)
+- Node.js 18+ with npm
+- MySQL 8 running on port 3308
+- Git installed
+
+6.2 Database Setup
+-------------------
+Step 1: Connect to MySQL
+
+    mysql -u root -p --port=3308
+
+Step 2: Create the database
+
+    CREATE DATABASE military_asset_management;
+
+Step 3: (Optional) Import initial SQL schema
+
+    USE military_asset_management;
+    SOURCE /path/to/database/military_asset_management.sql;
+
+Note: The backend uses spring.jpa.hibernate.ddl-auto=update, so all tables
+are auto-created by Hibernate on first startup. The SQL file is only needed
+for pre-seeded demo data.
+
+
+6.3 Backend Setup & Run
+------------------------
+Step 1: Navigate to backend folder
+
+    cd military-asset-management/backend
+
+Step 2: Run using Maven wrapper
+
+    On Linux / Mac:
+    ./mvnw spring-boot:run
+
+    On Windows CMD:
+    mvnw.cmd spring-boot:run
+
+The backend starts at: http://localhost:8080
+
+On first startup, DataLoader automatically:
+- Creates the default admin user account
+- Creates the "Central Base" if none exists
+
+
+Key application.properties settings:
+    DB URL      : jdbc:mysql://localhost:3308/military_asset_management
+    DB Username : root
+    DB Password : root
+    JWT Expiry  : 86400000 ms (24 hours)
+
+
+6.4 Frontend Setup & Run
+-------------------------
+Step 1: Navigate to frontend folder
+
+    cd military-asset-management/frontend
+
+Step 2: Install all dependencies
+
+    npm install
+
+Step 3: Start Vite development server
+
+    npm run dev
+
+The frontend is accessible at: http://localhost:5173
+
+
+6.5 Git Commands to Push to GitHub (Windows CMD)
+-------------------------------------------------
+Run these commands in Windows CMD (not PowerShell):
+
+    :: Navigate to project folder
+    cd "d:\new project\military-asset-management"
+
+    :: Set remote URL with Personal Access Token (PAT)
+    git remote set-url origin https://srushtisd24:YOUR_PAT_TOKEN@github.com/srushtisd24/Milatary_Assest_Management_System.git
+
+    :: Push to GitHub
+    git push -u origin main
+
+    :: If pushing from scratch for the first time:
+    git init
+    git add .
+    git commit -m "Initial commit: Military Asset Management System"
+    git branch -M main
+    git remote add origin https://github.com/srushtisd24/Milatary_Assest_Management_System.git
+    git push -u origin main
+
+How to get PAT Token:
+    1. Go to: https://github.com/settings/tokens/new
+    2. Give it a name (e.g. military-project)
+    3. Set expiration: 90 days
+    4. Check scope: [x] repo (full control)
+    5. Click "Generate token"
+    6. Copy token and paste it replacing YOUR_PAT_TOKEN above
+
+
+================================================================================
+7. API ENDPOINTS
+================================================================================
+
+Base URL: http://localhost:8080
+All protected endpoints require header: Authorization: Bearer <JWT Token>
+Swagger UI: http://localhost:8080/swagger-ui.html
+
+
+7.1 Authentication
+-------------------
+Method | Endpoint           | Description              | Auth Required
+-------|--------------------|--------------------------|---------------
+POST   | /api/auth/login    | Login, receive JWT token | No
+
+Request Body:
+    {
+      "username": "admin",
+      "password": "Admin@123"
+    }
+
+Response:
+    {
+      "token": "eyJhbGciOiJIUzI1NiJ9...",
+      "username": "admin",
+      "role": "ROLE_ADMIN",
+      "baseId": 1
+    }
+
+
+7.2 Dashboard
+--------------
+Method | Endpoint                    | Description              | Roles
+-------|-----------------------------|--------------------------|-------
+GET    | /api/dashboard/summary      | Aggregated stats         | All
+
+Optional Query Params:
+    ?baseId=1&equipmentTypeId=2&startDate=2026-01-01&endDate=2026-12-31
+
+Response includes:
+    openingBalance, purchases, transferIn, transferOut,
+    netMovement, closingBalance, assigned, expended
+
+
+7.3 Inventory
+--------------
+Method | Endpoint        | Description                          | Roles
+-------|-----------------|--------------------------------------|-------
+GET    | /api/inventory  | Get assets (ADMIN=all, others=own)   | All
+
+
+7.4 Purchases
+--------------
+Method | Endpoint        | Description                 | Roles
+-------|-----------------|-----------------------------|------------------
+GET    | /api/purchases  | List purchases (filtered)   | All
+POST   | /api/purchases  | Create new purchase record  | ADMIN, LOGISTICS
+
+
+7.5 Transfers
+--------------
+Method | Endpoint        | Description                 | Roles
+-------|-----------------|-----------------------------|-------
+GET    | /api/transfers  | List all transfers           | All
+POST   | /api/transfers  | Initiate inter-base transfer | All
+
+
+7.6 Assignments
+----------------
+Method | Endpoint                | Description                    | Roles
+-------|-------------------------|--------------------------------|------------------
+GET    | /api/assignments        | List assignments (filtered)    | ADMIN, COMMANDER
+POST   | /api/assignments        | Assign equipment to personnel  | ADMIN, COMMANDER
+PUT    | /api/assignments/{id}   | Update (mark as returned)      | ADMIN, COMMANDER
+
+
+7.7 Expenditures
+-----------------
+Method | Endpoint             | Description                  | Roles
+-------|----------------------|------------------------------|------------------
+GET    | /api/expenditures    | List expenditures (filtered) | ADMIN, COMMANDER
+POST   | /api/expenditures    | Log damaged/lost equipment   | ADMIN, COMMANDER
+
+
+7.8 Settings / Admin APIs
+--------------------------
+Method | Endpoint                    | Description               | Roles
+-------|-----------------------------|---------------------------|-------
+GET    | /api/bases                  | List all bases            | All
+POST   | /api/bases                  | Create a new base         | ADMIN
+DELETE | /api/bases/{id}             | Delete a base             | ADMIN
+GET    | /api/equipment-types        | List all equipment types  | All
+POST   | /api/equipment-types        | Create equipment type     | ADMIN
+DELETE | /api/equipment-types/{id}   | Delete equipment type     | ADMIN
+GET    | /api/users                  | List all users            | ADMIN
+POST   | /api/users                  | Create new user           | ADMIN
+PUT    | /api/users/{id}             | Update user               | ADMIN
+GET    | /api/audit-logs             | View all audit logs       | ADMIN
+
+
+================================================================================
+8. LOGIN CREDENTIALS
+================================================================================
+
+The following accounts are auto-created by DataLoader on first startup.
+All passwords are BCrypt-hashed in the database.
+
+------------------------------------------------------------------------
+ROLE: Administrator
+------------------------------------------------------------------------
+Username : admin
+Password : Admin@123
+Role     : ROLE_ADMIN
+Access   : Full system access - all bases, all features, all data
+           (Dashboard, Inventory, Purchases, Transfers, Assignments,
+            Expenditures, Audit Logs, Users, Settings)
+
+------------------------------------------------------------------------
+ROLE: Base Commander
+------------------------------------------------------------------------
+Username : commander
+Password : Commander@123
+Role     : ROLE_BASE_COMMANDER
+Access   : Own base only
+           (Dashboard, Inventory, Transfers, Assignments, Expenditures)
+
+------------------------------------------------------------------------
+ROLE: Logistics Officer
+------------------------------------------------------------------------
+Username : logistics
+Password : Logistics@123
+Role     : ROLE_LOGISTICS_OFFICER
+Access   : Own base - supply chain only
+           (Dashboard, Inventory, Purchases, Transfers)
+
+------------------------------------------------------------------------
+
+APPLICATION URLS
+----------------
+Frontend App   : http://localhost:5173
+API Server     : http://localhost:8080
+Swagger UI     : http://localhost:8080/swagger-ui.html
+OpenAPI JSON   : http://localhost:8080/api-docs
+
+
+SECURITY NOTICE
+---------------
+These are default development credentials only. In any production
+environment, all passwords must be changed immediately after first login.
+Never expose these credentials in public repositories or documentation.
+
+
+================================================================================
+          END OF DOCUMENT
+     Military Asset Management System
+================================================================================

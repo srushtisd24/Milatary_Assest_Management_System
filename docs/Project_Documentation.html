@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Military Asset Management System - Project Documentation</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 12pt;
+    line-height: 1.7;
+    color: #000;
+    background: #fff;
+  }
+  @page {
+    size: A4;
+    margin: 2.5cm 2cm 3cm 2.5cm;
+  }
+  @media print {
+    body { margin: 0; }
+    .no-print { display: none; }
+    .page-break { page-break-before: always; }
+  }
+
+  /* HEADER */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 55px;
+    border-bottom: 2px solid #1a3a6b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    background: #fff;
+    z-index: 100;
+  }
+  header .logo-text { font-size: 10pt; font-weight: bold; color: #1a3a6b; text-transform: uppercase; letter-spacing: 1px; }
+  header .header-title { font-size: 10pt; color: #555; font-style: italic; }
+
+  /* FOOTER */
+  footer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 45px;
+    border-top: 2px solid #1a3a6b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    background: #fff;
+    font-size: 9pt;
+    color: #555;
+    z-index: 100;
+  }
+
+  /* CONTENT */
+  .content { margin-top: 70px; margin-bottom: 60px; padding: 0 40px; }
+
+  /* COVER */
+  .cover { text-align: center; padding: 60px 20px; min-height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .cover-emblem { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #1a3a6b, #2563eb); display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; font-size: 36px; color: #fff; }
+  .cover h1 { font-size: 22pt; font-weight: bold; color: #1a3a6b; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+  .cover h2 { font-size: 14pt; color: #333; font-weight: normal; margin-bottom: 30px; }
+  .cover-divider { width: 120px; height: 3px; background: #1a3a6b; margin: 20px auto; }
+  .cover-meta { font-size: 11pt; color: #444; line-height: 2; margin-top: 20px; }
+  .cover-meta strong { color: #1a3a6b; }
+  .cover-badge { display: inline-block; background: #1a3a6b; color: #fff; padding: 6px 20px; border-radius: 20px; font-size: 10pt; margin-top: 30px; letter-spacing: 1px; }
+
+  /* HEADINGS */
+  h1.section-title { font-size: 16pt; font-weight: bold; color: #1a3a6b; text-transform: uppercase; border-bottom: 2px solid #1a3a6b; padding-bottom: 6px; margin: 30px 0 16px; letter-spacing: 1px; }
+  h2.subsection-title { font-size: 14pt; font-weight: bold; color: #2563eb; margin: 20px 0 10px; }
+  p { font-size: 12pt; margin-bottom: 10px; text-align: justify; }
+  ul, ol { font-size: 12pt; margin: 8px 0 10px 24px; line-height: 1.9; }
+  li { margin-bottom: 4px; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 11pt; margin: 14px 0 20px; }
+  thead tr { background: #1a3a6b; color: #fff; }
+  thead th { padding: 9px 12px; text-align: left; font-size: 12pt; font-weight: bold; }
+  tbody tr:nth-child(even) { background: #f0f4ff; }
+  tbody td { padding: 8px 12px; border-bottom: 1px solid #ccd6f6; }
+
+  /* CODE */
+  .code-block { background: #f0f4ff; border-left: 4px solid #1a3a6b; padding: 12px 16px; font-family: 'Courier New', monospace; font-size: 10pt; margin: 12px 0 16px; white-space: pre-wrap; word-break: break-all; border-radius: 4px; }
+
+  /* INFO BOXES */
+  .info-box { background: #eef3ff; border: 1px solid #2563eb; border-radius: 6px; padding: 12px 16px; margin: 12px 0 18px; font-size: 12pt; }
+  .info-box strong { color: #1a3a6b; }
+  .warning-box { background: #fff8e1; border: 1px solid #f59e0b; border-radius: 6px; padding: 12px 16px; margin: 12px 0 18px; font-size: 12pt; }
+
+  /* CREDENTIAL CARDS */
+  .cred-card { background: #1a3a6b; color: #fff; border-radius: 8px; padding: 16px 20px; margin: 10px 0; font-size: 12pt; }
+  .cred-card .role { font-size: 13pt; font-weight: bold; color: #93c5fd; margin-bottom: 6px; }
+  .cred-card .cred-row { display: flex; gap: 20px; margin-top: 4px; }
+  .cred-card .cred-label { color: #93c5fd; font-size: 11pt; min-width: 90px; }
+  .cred-card .cred-val { font-family: 'Courier New', monospace; font-weight: bold; letter-spacing:1px; }
+
+  /* PRINT BUTTON */
+  .print-btn { position: fixed; top: 14px; right: 20px; background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: Arial, sans-serif; z-index: 999; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .print-btn:hover { background: #1a4fd8; }
+
+  /* TOC */
+  .toc-item { font-size: 12pt; display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #aaa; }
+  .toc-item a { color: #1a3a6b; text-decoration: none; }
+  .toc-item .pg { color: #555; }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">&#128438; Save as PDF</button>
+
+<header>
+  <span class="logo-text">&#9876; Military Asset Management System</span>
+  <span class="header-title">Project Documentation &nbsp;|&nbsp; Confidential</span>
+</header>
+
+<footer>
+  <span>&copy; 2026 Military Asset Management System. All Rights Reserved.</span>
+  <span>Prepared by: srushtisd24 &nbsp;|&nbsp; <span id="current-date"></span></span>
+</footer>
+
+<div class="content">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-emblem">&#9876;</div>
+    <h1>Military Asset<br/>Management System</h1>
+    <h2>Project Documentation Report</h2>
+    <div class="cover-divider"></div>
+    <div class="cover-meta">
+      <p><strong>Platform:</strong> Full-Stack Web Application</p>
+      <p><strong>Backend:</strong> Spring Boot 3 (Java 17)</p>
+      <p><strong>Frontend:</strong> React 18 (Vite)</p>
+      <p><strong>Database:</strong> MySQL 8</p>
+      <p><strong>Authentication:</strong> JWT with Role-Based Access Control</p>
+    </div>
+    <div class="cover-badge">CONFIDENTIAL DOCUMENTATION</div>
+    <p style="margin-top:40px; font-size:10pt; color:#888;">Prepared By: srushtisd24 &nbsp;|&nbsp; Date: <span id="cover-date"></span></p>
+  </div>
+
+  <!-- TOC -->
+  <div class="page-break"></div>
+  <h1 class="section-title">Table of Contents</h1>
+  <div style="margin-top:16px;">
+    <div class="toc-item"><a href="#s1">1. Project Overview</a><span class="pg">3</span></div>
+    <div class="toc-item"><a href="#s2">2. Tech Stack &amp; Architecture</a><span class="pg">4</span></div>
+    <div class="toc-item"><a href="#s3">3. Data Models / Schema</a><span class="pg">5</span></div>
+    <div class="toc-item"><a href="#s4">4. RBAC Explanation</a><span class="pg">7</span></div>
+    <div class="toc-item"><a href="#s5">5. API Logging</a><span class="pg">8</span></div>
+    <div class="toc-item"><a href="#s6">6. Setup Instructions</a><span class="pg">9</span></div>
+    <div class="toc-item"><a href="#s7">7. API Endpoints</a><span class="pg">11</span></div>
+    <div class="toc-item"><a href="#s8">8. Login Credentials</a><span class="pg">13</span></div>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="page-break" id="s1"></div>
+  <h1 class="section-title">1. Project Overview</h1>
+
+  <h2 class="subsection-title">1.1 Description</h2>
+  <p>The Military Asset Management System (MAMS) is a full-stack web application designed to digitize, track, and manage military equipment and assets across multiple bases. The platform provides a centralized dashboard for senior officers and base commanders to monitor the real-time status of inventory, equipment purchases, personnel assignments, inter-base transfers, and expenditure logs.</p>
+  <p>The system replaces traditional paper-based logistics tracking with a secure, role-restricted digital platform — ensuring that all equipment movements are recorded, traceable, and auditable through a comprehensive audit logging mechanism.</p>
+
+  <h2 class="subsection-title">1.2 Key Features</h2>
+  <ul>
+    <li>Real-time Inventory tracking across multiple military bases</li>
+    <li>Equipment Purchases management with quantity and cost tracking</li>
+    <li>Inter-Base Transfer management with source/destination validation</li>
+    <li>Personnel Assignment tracking with status (Active / Returned)</li>
+    <li>Expenditure logging for damaged, lost, or consumed assets</li>
+    <li>Dashboard with live charts, metrics, and advanced filters (Date, Base, Equipment Type)</li>
+    <li>Audit Log for all system-level API transactions (POST, PUT, DELETE)</li>
+    <li>User and Base Management via Admin-only Settings panel</li>
+    <li>JWT-based Authentication with Role-Based Access Control (RBAC)</li>
+    <li>Dark/Light theme toggle with persistent user preference</li>
+  </ul>
+
+  <h2 class="subsection-title">1.3 Assumptions</h2>
+  <ul>
+    <li>Each military base is a distinct entity with its own dedicated inventory pool.</li>
+    <li>Each user account is assigned to exactly one base at the time of creation.</li>
+    <li>All financial values are expressed in Indian Rupees (INR / &#8377;).</li>
+    <li>The system is intended to run on a closed intranet and not exposed to the public internet.</li>
+    <li>Equipment types are pre-defined by the Administrator and are shared globally across all bases.</li>
+    <li>All dates and times are recorded in UTC and displayed in the user's local timezone.</li>
+  </ul>
+
+  <h2 class="subsection-title">1.4 Limitations</h2>
+  <ul>
+    <li>No file upload support for purchase orders or transfer documents.</li>
+    <li>Email notification functionality is configured in settings but not connected to a mail server.</li>
+    <li>No real-time push notifications; users must refresh pages to see updated data.</li>
+    <li>Application is English-only; no multi-language (i18n) support.</li>
+    <li>Report exports (PDF/Excel per module) are not yet implemented.</li>
+    <li>Mobile responsiveness is partially implemented; optimized for desktop use.</li>
+  </ul>
+
+  <!-- SECTION 2 -->
+  <div class="page-break" id="s2"></div>
+  <h1 class="section-title">2. Tech Stack &amp; Architecture</h1>
+
+  <h2 class="subsection-title">2.1 Backend — Spring Boot 3 (Java 17)</h2>
+  <p>The backend is a RESTful API server built with Spring Boot 3, leveraging the Spring ecosystem for rapid development. Spring Security handles JWT authentication, while Spring Data JPA and Hibernate manage all database operations via ORM.</p>
+  <table>
+    <thead><tr><th>Component</th><th>Technology</th><th>Reason</th></tr></thead>
+    <tbody>
+      <tr><td>Framework</td><td>Spring Boot 3.x</td><td>Production-ready, auto-configured REST APIs</td></tr>
+      <tr><td>ORM</td><td>Spring Data JPA / Hibernate</td><td>Entity mapping, auto schema, JPQL queries</td></tr>
+      <tr><td>Security</td><td>Spring Security + JWT</td><td>Stateless authentication, role enforcement</td></tr>
+      <tr><td>API Docs</td><td>SpringDoc (Swagger UI)</td><td>Auto-generated OpenAPI documentation</td></tr>
+      <tr><td>Build Tool</td><td>Apache Maven</td><td>Dependency management and project build</td></tr>
+      <tr><td>Language</td><td>Java 17</td><td>LTS version with modern language features</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">2.2 Frontend — React 18 (Vite)</h2>
+  <p>The frontend is a Single Page Application (SPA) built with React 18 and bootstrapped with Vite for fast development. UI uses Bootstrap 5 and React-Bootstrap for consistent, responsive layout.</p>
+  <table>
+    <thead><tr><th>Component</th><th>Technology</th><th>Reason</th></tr></thead>
+    <tbody>
+      <tr><td>Framework</td><td>React 18</td><td>Component-based, virtual DOM, reusable UI</td></tr>
+      <tr><td>Build Tool</td><td>Vite</td><td>Fast HMR, modern ES module builds</td></tr>
+      <tr><td>UI Library</td><td>Bootstrap 5 + React-Bootstrap</td><td>Responsive grid, prebuilt components</td></tr>
+      <tr><td>Routing</td><td>React Router v6</td><td>Client-side SPA navigation</td></tr>
+      <tr><td>HTTP Client</td><td>Axios</td><td>Promise-based API calls with JWT interceptors</td></tr>
+      <tr><td>Charts</td><td>Recharts</td><td>SVG-based responsive charts for dashboard</td></tr>
+      <tr><td>Icons</td><td>Bootstrap Icons</td><td>Consistent icon set across all pages</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">2.3 Database — MySQL 8</h2>
+  <p>MySQL 8 is the relational database. Hibernate auto-generates and updates the schema using ddl-auto=update based on JPA entity annotations. The database runs on port 3308 to avoid conflict with any default MySQL installation.</p>
+
+  <h2 class="subsection-title">2.4 Architecture Overview</h2>
+  <div class="code-block">Browser (React SPA on port :5173)
+        |
+        |  HTTP/REST  (Axios + JWT Bearer Token)
+        v
+Spring Boot API Server (port :8080)
+    |-- SecurityConfig      -- JWT filter chain, role guards
+    |-- AuditInterceptor    -- Logs every POST/PUT/DELETE
+    |-- Controllers         -- Route handlers per module
+    |-- Repositories        -- JPA queries to MySQL
+        |
+        v
+MySQL Database (port :3308)
+    -- military_asset_management  (schema)</div>
+
+  <!-- SECTION 3 -->
+  <div class="page-break" id="s3"></div>
+  <h1 class="section-title">3. Data Models / Schema</h1>
+
+  <h2 class="subsection-title">3.1 bases</h2>
+  <table>
+    <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>BIGINT (PK)</td><td>Unique base identifier</td></tr>
+      <tr><td>name</td><td>VARCHAR</td><td>Name of the military base</td></tr>
+      <tr><td>code</td><td>VARCHAR</td><td>Short base code (e.g., CENTRAL-00)</td></tr>
+      <tr><td>location</td><td>VARCHAR</td><td>Physical location / region</td></tr>
+      <tr><td>active</td><td>BOOLEAN</td><td>Operational status flag</td></tr>
+      <tr><td>created_at</td><td>DATETIME</td><td>Record creation timestamp</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">3.2 users</h2>
+  <table>
+    <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>BIGINT (PK)</td><td>Unique user ID</td></tr>
+      <tr><td>username</td><td>VARCHAR (UNIQUE)</td><td>Login username</td></tr>
+      <tr><td>password</td><td>VARCHAR</td><td>BCrypt hashed password</td></tr>
+      <tr><td>full_name</td><td>VARCHAR</td><td>User display name</td></tr>
+      <tr><td>email</td><td>VARCHAR</td><td>Email address</td></tr>
+      <tr><td>role</td><td>VARCHAR</td><td>ROLE_ADMIN / ROLE_BASE_COMMANDER / ROLE_LOGISTICS_OFFICER</td></tr>
+      <tr><td>base_id</td><td>BIGINT (FK to bases)</td><td>Assigned base</td></tr>
+      <tr><td>active</td><td>BOOLEAN</td><td>Account enabled status</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">3.3 equipment_types</h2>
+  <table>
+    <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>BIGINT (PK)</td><td>Unique equipment type ID</td></tr>
+      <tr><td>name</td><td>VARCHAR</td><td>Type name (e.g., Rifle, Vehicle)</td></tr>
+      <tr><td>category</td><td>VARCHAR</td><td>Category classification</td></tr>
+      <tr><td>description</td><td>TEXT</td><td>Detailed description</td></tr>
+      <tr><td>active</td><td>BOOLEAN</td><td>Active status flag</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">3.4 assets (Inventory)</h2>
+  <table>
+    <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>BIGINT (PK)</td><td>Unique asset record ID</td></tr>
+      <tr><td>base_id</td><td>BIGINT (FK)</td><td>Base that holds this asset</td></tr>
+      <tr><td>equipment_type_id</td><td>BIGINT (FK)</td><td>Type of equipment</td></tr>
+      <tr><td>quantity</td><td>INT</td><td>Current quantity at this base</td></tr>
+      <tr><td>status</td><td>VARCHAR</td><td>AVAILABLE / ASSIGNED / EXPENDED</td></tr>
+      <tr><td>serial_number</td><td>VARCHAR</td><td>Optional serial reference</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">3.5 Other Tables Summary</h2>
+  <table>
+    <thead><tr><th>Table</th><th>Key FK Columns</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>purchases</td><td>base_id, equipment_type_id, created_by</td><td>Equipment procurement records with cost</td></tr>
+      <tr><td>transfers</td><td>from_base_id, to_base_id, equipment_type_id</td><td>Inter-base equipment movements</td></tr>
+      <tr><td>assignments</td><td>base_id, equipment_type_id</td><td>Equipment assigned to named personnel</td></tr>
+      <tr><td>expenditures</td><td>base_id, equipment_type_id, recorded_by</td><td>Damaged / lost / consumed equipment</td></tr>
+      <tr><td>audit_logs</td><td>user_id (nullable)</td><td>Full system API activity trail</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">3.6 Entity Relationships</h2>
+  <div class="code-block">bases -----+---- users           (Many users per base)
+           +---- assets          (Many assets per base)
+           +---- purchases       (Many purchases per base)
+           +---- transfers       (from_base / to_base)
+           +---- assignments     (Many assignments per base)
+           +---- expenditures    (Many expenditures per base)
+
+equipment_types --+-- assets
+                  +-- purchases
+                  +-- transfers
+                  +-- assignments
+                  +-- expenditures
+
+users ------------+-- audit_logs (user_id, nullable for System actions)</div>
+
+  <!-- SECTION 4 -->
+  <div class="page-break" id="s4"></div>
+  <h1 class="section-title">4. RBAC Explanation</h1>
+
+  <h2 class="subsection-title">4.1 Roles Defined</h2>
+  <table>
+    <thead><tr><th>Role</th><th>Constant in DB</th><th>Scope of Access</th></tr></thead>
+    <tbody>
+      <tr><td>Administrator</td><td>ROLE_ADMIN</td><td>Global — all bases, all data, all features</td></tr>
+      <tr><td>Base Commander</td><td>ROLE_BASE_COMMANDER</td><td>Restricted to their assigned base only</td></tr>
+      <tr><td>Logistics Officer</td><td>ROLE_LOGISTICS_OFFICER</td><td>Own base — supply chain operations only</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">4.2 Permission Matrix</h2>
+  <table>
+    <thead><tr><th>Feature / Module</th><th>Admin</th><th>Commander</th><th>Logistics</th></tr></thead>
+    <tbody>
+      <tr><td>Dashboard (global view + base filter)</td><td>Yes</td><td>Base only</td><td>Base only</td></tr>
+      <tr><td>Inventory (all bases)</td><td>Yes</td><td>Base only</td><td>Base only</td></tr>
+      <tr><td>Create Purchase</td><td>Yes</td><td>No</td><td>Yes</td></tr>
+      <tr><td>Initiate Transfer</td><td>Yes (any base)</td><td>Yes (from own)</td><td>Yes (from own)</td></tr>
+      <tr><td>Assignments (Create/View)</td><td>Yes</td><td>Yes (own base)</td><td>No</td></tr>
+      <tr><td>Expenditures (Create/View)</td><td>Yes</td><td>Yes (own base)</td><td>No</td></tr>
+      <tr><td>Audit Logs</td><td>Yes</td><td>No</td><td>No</td></tr>
+      <tr><td>User Management</td><td>Yes</td><td>No</td><td>No</td></tr>
+      <tr><td>Settings (Bases / Equipment Types)</td><td>Yes</td><td>No</td><td>No</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">4.3 Backend Enforcement</h2>
+  <p>Each REST controller extracts the authenticated principal via Spring Security's SecurityContextHolder, fetches the User entity from the database, and checks the role field before processing any request. Unauthorized requests receive HTTP 403 Forbidden.</p>
+  <div class="code-block">// AssetController.java — Role-Based Inventory Filter
+Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+User user = userRepository.findByUsername(auth.getName()).orElse(null);
+
+if (user.getRole().contains("ADMIN")) {
+    return assetRepository.findAll();                          // All bases
+} else {
+    return assetRepository.findByBaseId(user.getBase().getId()); // Own base only
+}</div>
+
+  <h2 class="subsection-title">4.4 Frontend Enforcement</h2>
+  <p>Sidebar navigation links are conditionally rendered in Layout.jsx based on the role stored in the JWT payload in localStorage. Protected action buttons (e.g., "Add Purchase") are hidden for unauthorized roles. This is a UX-layer guard only — all real security is enforced by the backend API.</p>
+
+  <!-- SECTION 5 -->
+  <div class="page-break" id="s5"></div>
+  <h1 class="section-title">5. API Logging</h1>
+
+  <h2 class="subsection-title">5.1 Mechanism Overview</h2>
+  <p>All write-operations (POST, PUT, DELETE) are automatically captured by a Spring MVC HandlerInterceptor called AuditInterceptor. This interceptor fires after every HTTP response is committed (afterCompletion phase), ensuring that both successful and failed requests are logged to the audit_logs table.</p>
+
+  <h2 class="subsection-title">5.2 Fields Captured</h2>
+  <table>
+    <thead><tr><th>Field</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>timestamp</td><td>UTC datetime of the API call</td></tr>
+      <tr><td>http_method</td><td>POST / PUT / DELETE</td></tr>
+      <tr><td>api_endpoint</td><td>Full URL path (e.g., /api/purchases)</td></tr>
+      <tr><td>entity_type</td><td>Module name extracted from the URL segment</td></tr>
+      <tr><td>status</td><td>SUCCESS (2xx response) or FAILED (non-2xx)</td></tr>
+      <tr><td>user_id</td><td>ID of the authenticated user; NULL for system actions</td></tr>
+      <tr><td>action</td><td>Combined HTTP method and path string</td></tr>
+      <tr><td>description</td><td>Human-readable description of the performed action</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">5.3 AuditInterceptor Code</h2>
+  <div class="code-block">// AuditInterceptor.java
+@Override
+public void afterCompletion(HttpServletRequest req, HttpServletResponse res, ...) {
+    String method = req.getMethod();
+    if (method.equals("POST") || method.equals("PUT") || method.equals("DELETE")) {
+        String path    = req.getRequestURI();
+        String status  = (res.getStatus() >= 200 &amp;&amp; res.getStatus() &lt; 300)
+                         ? "SUCCESS" : "FAILED";
+        String entity  = path.split("/").length &gt; 2 ? path.split("/")[2] : "UNKNOWN";
+        auditService.log(method + " " + path, entity, null,
+                         "User performed " + method + " " + path, method, path, status);
+    }
+}</div>
+
+  <h2 class="subsection-title">5.4 Viewing Logs</h2>
+  <div class="info-box">
+    <strong>Access:</strong> Only ROLE_ADMIN users can view audit logs.<br/>
+    <strong>Location in App:</strong> Sidebar &#8594; Audit Logs<br/>
+    <strong>Display:</strong> Sorted newest-first. HTTP method and status have colored badge indicators.
+  </div>
+
+  <!-- SECTION 6 -->
+  <div class="page-break" id="s6"></div>
+  <h1 class="section-title">6. Setup Instructions</h1>
+
+  <h2 class="subsection-title">6.1 Prerequisites</h2>
+  <ul>
+    <li>Java 17 or later (JDK installed and JAVA_HOME set)</li>
+    <li>Node.js 18+ with npm</li>
+    <li>MySQL 8 running on port 3308</li>
+    <li>Git installed (for cloning the repository)</li>
+  </ul>
+
+  <h2 class="subsection-title">6.2 Database Setup</h2>
+  <div class="code-block">-- Connect to MySQL (port 3308)
+mysql -u root -p --port=3308
+
+-- Create the database
+CREATE DATABASE military_asset_management;
+
+-- The schema will be auto-created by Hibernate on first startup.
+-- Optionally, import the SQL file for pre-seeded data:
+USE military_asset_management;
+SOURCE /path/to/database/military_asset_management.sql;</div>
+
+  <h2 class="subsection-title">6.3 Backend Setup &amp; Run</h2>
+  <div class="code-block"># Navigate to backend folder
+cd military-asset-management/backend
+
+# Run using Maven wrapper (Linux / Mac)
+./mvnw spring-boot:run
+
+# Run using Maven wrapper (Windows CMD)
+mvnw.cmd spring-boot:run</div>
+
+  <p>The backend starts at <strong>http://localhost:8080</strong>. On first startup, DataLoader auto-creates the admin user and Central Base if they don't already exist.</p>
+
+  <div class="info-box">
+    <strong>Key application.properties settings:</strong><br/>
+    DB URL: jdbc:mysql://localhost:3308/military_asset_management<br/>
+    DB Username: root &nbsp;|&nbsp; DB Password: root<br/>
+    JWT Expiry: 86400000 ms (24 hours)
+  </div>
+
+  <h2 class="subsection-title">6.4 Frontend Setup &amp; Run</h2>
+  <div class="code-block"># Navigate to frontend folder
+cd military-asset-management/frontend
+
+# Install all npm dependencies
+npm install
+
+# Start Vite development server
+npm run dev</div>
+
+  <p>The frontend is accessible at <strong>http://localhost:5173</strong>. Open this URL in a web browser to use the application.</p>
+
+  <h2 class="subsection-title">6.5 GitHub Push Commands (CMD)</h2>
+  <p>To push this project to the GitHub repository, run the following commands in Windows CMD (not PowerShell):</p>
+  <div class="code-block">:: Navigate to project folder
+cd "d:\new project\military-asset-management"
+
+:: Set remote URL with Personal Access Token (PAT) embedded
+git remote set-url origin https://srushtisd24:YOUR_PAT_TOKEN@github.com/srushtisd24/Milatary_Assest_Management_System.git
+
+:: Push the main branch to GitHub
+git push -u origin main
+
+:: ---- If pushing for the very first time from scratch ----
+git init
+git add .
+git commit -m "Initial commit: Military Asset Management System"
+git branch -M main
+git remote add origin https://github.com/srushtisd24/Milatary_Assest_Management_System.git
+git push -u origin main</div>
+
+  <div class="warning-box">
+    <strong>Important:</strong> GitHub no longer accepts passwords for git push. You must use a Personal Access Token (PAT).<br/>
+    To generate one: GitHub.com &#8594; Settings &#8594; Developer Settings &#8594; Personal Access Tokens &#8594; Generate New Token (select <strong>repo</strong> scope).
+  </div>
+
+  <!-- SECTION 7 -->
+  <div class="page-break" id="s7"></div>
+  <h1 class="section-title">7. API Endpoints</h1>
+  <p>All endpoints are prefixed with <code>http://localhost:8080</code>. Protected endpoints require: <code>Authorization: Bearer &lt;JWT Token&gt;</code> in the request header.</p>
+
+  <h2 class="subsection-title">7.1 Authentication</h2>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th></tr></thead>
+    <tbody>
+      <tr><td>POST</td><td>/api/auth/login</td><td>Authenticate and receive JWT token</td><td>No</td></tr>
+    </tbody>
+  </table>
+  <div class="code-block">// Request Body:
+{ "username": "admin", "password": "Admin@123" }
+
+// Response:
+{ "token": "eyJhbGciOiJIUzI1NiJ9...", "username": "admin", "role": "ROLE_ADMIN", "baseId": 1 }</div>
+
+  <h2 class="subsection-title">7.2 Dashboard</h2>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Roles</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td>/api/dashboard/summary</td><td>Aggregated stats: opening balance, net movement, closing balance, assigned, expended</td><td>All</td></tr>
+    </tbody>
+  </table>
+  <p>Optional Query Params: <code>?baseId=1&amp;equipmentTypeId=2&amp;startDate=2026-01-01&amp;endDate=2026-12-31</code></p>
+
+  <h2 class="subsection-title">7.3 Inventory</h2>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Roles</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td>/api/inventory</td><td>Get all assets. ADMIN gets all bases; others get own base only.</td><td>All</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">7.4 Purchases</h2>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Roles</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td>/api/purchases</td><td>List all purchases (role-filtered)</td><td>All</td></tr>
+      <tr><td>POST</td><td>/api/purchases</td><td>Create a new purchase record</td><td>ADMIN, LOGISTICS</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">7.5 Transfers</h2>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Roles</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td>/api/transfers</td><td>List all transfers</td><td>All</td></tr>
+      <tr><td>POST</td><td>/api/transfers</td><td>Initiate a new inter-base transfer</td><td>All</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">7.6 Assignments</h2>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Roles</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td>/api/assignments</td><td>List assignments (role-filtered by base)</td><td>ADMIN, COMMANDER</td></tr>
+      <tr><td>POST</td><td>/api/assignments</td><td>Assign equipment to a personnel member</td><td>ADMIN, COMMANDER</td></tr>
+      <tr><td>PUT</td><td>/api/assignments/{id}</td><td>Update assignment (e.g., mark as returned)</td><td>ADMIN, COMMANDER</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">7.7 Expenditures</h2>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Roles</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td>/api/expenditures</td><td>List expenditures (role-filtered)</td><td>ADMIN, COMMANDER</td></tr>
+      <tr><td>POST</td><td>/api/expenditures</td><td>Log a new expenditure (damaged/lost)</td><td>ADMIN, COMMANDER</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="subsection-title">7.8 Settings / Admin APIs</h2>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Roles</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td>/api/bases</td><td>List all bases</td><td>All</td></tr>
+      <tr><td>POST</td><td>/api/bases</td><td>Create a new base</td><td>ADMIN</td></tr>
+      <tr><td>DELETE</td><td>/api/bases/{id}</td><td>Delete a base</td><td>ADMIN</td></tr>
+      <tr><td>GET</td><td>/api/equipment-types</td><td>List all equipment types</td><td>All</td></tr>
+      <tr><td>POST</td><td>/api/equipment-types</td><td>Create a new equipment type</td><td>ADMIN</td></tr>
+      <tr><td>DELETE</td><td>/api/equipment-types/{id}</td><td>Delete an equipment type</td><td>ADMIN</td></tr>
+      <tr><td>GET</td><td>/api/users</td><td>List all users</td><td>ADMIN</td></tr>
+      <tr><td>POST</td><td>/api/users</td><td>Create a new user</td><td>ADMIN</td></tr>
+      <tr><td>PUT</td><td>/api/users/{id}</td><td>Update user details or password</td><td>ADMIN</td></tr>
+      <tr><td>GET</td><td>/api/audit-logs</td><td>Retrieve all audit log entries</td><td>ADMIN</td></tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 8 -->
+  <div class="page-break" id="s8"></div>
+  <h1 class="section-title">8. Login Credentials</h1>
+  <p>The following accounts are auto-seeded by the DataLoader on first startup. All passwords are BCrypt-hashed in the database.</p>
+
+  <div class="cred-card">
+    <div class="role">&#128273; Administrator</div>
+    <div class="cred-row"><span class="cred-label">Username:</span><span class="cred-val">admin</span></div>
+    <div class="cred-row"><span class="cred-label">Password:</span><span class="cred-val">Admin@123</span></div>
+    <div class="cred-row"><span class="cred-label">Role:</span><span class="cred-val">ROLE_ADMIN</span></div>
+    <div class="cred-row"><span class="cred-label">Access:</span><span class="cred-val">Full system — all bases, all features, all data</span></div>
+  </div>
+
+  <div style="height:12px;"></div>
+  <div class="cred-card" style="background:#1a4d2e;">
+    <div class="role" style="color:#86efac;">&#127894; Base Commander</div>
+    <div class="cred-row"><span class="cred-label" style="color:#86efac;">Username:</span><span class="cred-val">commander</span></div>
+    <div class="cred-row"><span class="cred-label" style="color:#86efac;">Password:</span><span class="cred-val">Commander@123</span></div>
+    <div class="cred-row"><span class="cred-label" style="color:#86efac;">Role:</span><span class="cred-val">ROLE_BASE_COMMANDER</span></div>
+    <div class="cred-row"><span class="cred-label" style="color:#86efac;">Access:</span><span class="cred-val">Own base — inventory, assignments, expenditures, transfers</span></div>
+  </div>
+
+  <div style="height:12px;"></div>
+  <div class="cred-card" style="background:#7c2d12;">
+    <div class="role" style="color:#fdba74;">&#128230; Logistics Officer</div>
+    <div class="cred-row"><span class="cred-label" style="color:#fdba74;">Username:</span><span class="cred-val">logistics</span></div>
+    <div class="cred-row"><span class="cred-label" style="color:#fdba74;">Password:</span><span class="cred-val">Logistics@123</span></div>
+    <div class="cred-row"><span class="cred-label" style="color:#fdba74;">Role:</span><span class="cred-val">ROLE_LOGISTICS_OFFICER</span></div>
+    <div class="cred-row"><span class="cred-label" style="color:#fdba74;">Access:</span><span class="cred-val">Own base — purchases and transfers only</span></div>
+  </div>
+
+  <div class="warning-box" style="margin-top:24px;">
+    <strong>Security Notice:</strong> These are default development credentials. In any production deployment, all passwords must be changed immediately after first login. Do not commit credentials to public repositories.
+  </div>
+
+  <div class="info-box" style="margin-top:16px;">
+    <strong>Application URL:</strong> http://localhost:5173<br/>
+    <strong>API Base URL:</strong> http://localhost:8080<br/>
+    <strong>Swagger UI:</strong> http://localhost:8080/swagger-ui.html<br/>
+    <strong>OpenAPI JSON:</strong> http://localhost:8080/api-docs
+  </div>
+
+</div>
+
+<script>
+  const now = new Date();
+  const formatted = now.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('cover-date').textContent = formatted;
+  document.getElementById('current-date').textContent = formatted;
+</script>
+</body>
+</html>
